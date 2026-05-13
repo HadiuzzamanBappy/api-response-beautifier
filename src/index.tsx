@@ -1,13 +1,19 @@
 import { createRoot } from "react-dom/client";
-import App from "@/App";
-import "@/index.css";
+import App from "./App";
+import "./index.css";
 
 const MAX_JSON_SIZE = 2 * 1024 * 1024; // 2MB limit for performance
 
-function init() {
+async function init(force = false) {
+  // Ensure body exists (important for document_start)
+  if (!document.body) return;
+
+  // If already injected, don't do it again
+  if (document.getElementById("api-beautifier-root")) return;
+
   const isJsonType = document.contentType === "application/json";
   const isPlainText = document.contentType === "text/plain";
-  const rawContent = document.body.innerText.trim();
+  const rawContent = document.body.innerText ? document.body.innerText.trim() : "";
 
   // Basic check: Must exist and have a minimum length
   if (!rawContent || rawContent.length < 2) return;
@@ -18,18 +24,27 @@ function init() {
     return;
   }
 
-  // Sniffing: If it's text/plain, only proceed if it looks like JSON
-  if (isPlainText) {
-    const looksLikeJson = (rawContent.startsWith("{") && rawContent.endsWith("}")) || 
-                          (rawContent.startsWith("[") && rawContent.endsWith("]"));
-    if (!looksLikeJson) return;
-  } else if (!isJsonType) {
-    return;
+  // Sniffing logic
+  if (!force) {
+    if (isJsonType) {
+      // Auto-run on explicit JSON
+    } else if (isPlainText) {
+      // Only auto-run on plain text if it strictly looks like a JSON object/array
+      const looksLikeJson = (rawContent.startsWith("{") && rawContent.endsWith("}")) ||
+        (rawContent.startsWith("[") && rawContent.endsWith("]"));
+      if (!looksLikeJson) return;
+    } else {
+      // Don't auto-run on HTML or other types
+      return;
+    }
   }
 
   try {
     // Validate JSON
     const parsed = JSON.parse(rawContent);
+
+    // If valid JSON, request CSS injection from background
+    await chrome.runtime.sendMessage({ type: "INJECT_CSS" });
 
     // Replace the entire body with our React app
     const rootContainer = document.createElement("div");
@@ -45,14 +60,18 @@ function init() {
     const root = createRoot(rootContainer);
     root.render(<App data={parsed} raw={rawContent} />);
   } catch (e) {
-    // If parsing fails (not valid JSON after all), we do nothing and leave the original view
+    if (force) {
+      alert("API Beautifier: This page does not contain valid JSON.");
+    }
     console.debug("API Beautifier: Content is not valid JSON, skipping.", e);
   }
 }
 
-// Some browsers might need a slight delay or wait for DOM
-if (document.readyState === "complete") {
-  init();
-} else {
-  window.addEventListener("load", init);
-}
+// Listen for manual trigger from popup
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "BEAUTIFY_PAGE") {
+    init(true);
+    sendResponse({ success: true });
+  }
+});
+

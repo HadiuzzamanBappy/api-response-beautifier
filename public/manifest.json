@@ -3,41 +3,47 @@
   "name": "API Response Beautifier",
   "version": "1.0.0",
   "description": "Beautify ugly JSON API responses into a premium, interactive tree view.",
+  "short_name": "JSON Beautifier",
+  "author": "Hadiuzzaman Bappy",
+  "homepage_url": "https://hadiuzzamanbappy.vercel.app",
+  "offline_enabled": true,
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting"
+  ],
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "action": {
-    "default_title": "API Response Beautifier"
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
   },
-  "permissions": [
-    "activeTab",
-    "storage"
-  ],
-  "content_scripts": [
-    {
-      "matches": [
-        "<all_urls>"
-      ],
-      "js": [
-        "content.js"
-      ],
-      "css": [
-        "content.css"
-      ],
-      "run_at": "document_start"
-    }
-  ],
+  "action": {
+    "default_title": "API Response Beautifier",
+    "default_popup": "popup.html"
+  },
   "web_accessible_resources": [
     {
       "resources": [
+        "assets/*",
         "icons/*"
       ],
       "matches": [
         "<all_urls>"
       ]
     }
-  ]
+  ],
+  "commands": {
+    "beautify-page": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+B",
+        "mac": "Command+Shift+B"
+      },
+      "description": "Trigger JSON Beautifier"
+    }
+  }
 }

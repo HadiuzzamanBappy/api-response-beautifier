@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Search, Copy, Moon, Sun, Code, FileText } from "lucide-react";
 import { useJsonSearch } from "@/hooks/useJsonSearch";
-import JsonNode from "./components/JsonNode";
+import JsonNode from "@/components/JsonNode";
 
 interface AppProps {
   data: unknown;
@@ -15,7 +15,7 @@ const App = ({ data, raw }: AppProps): React.JSX.Element => {
     if (saved) return saved === "dark";
     return window.matchMedia("(prefers-color-scheme: dark)").matches;
   });
-  
+
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"pretty" | "raw">("pretty");
   const [hoveredPath, setHoveredPath] = useState<string | null>(null);
@@ -37,7 +37,7 @@ const App = ({ data, raw }: AppProps): React.JSX.Element => {
     mediaQuery.addEventListener("change", handleChange);
     return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
-  
+
   const { paths: searchResults, count: matchCount } = useJsonSearch(data, searchQuery);
 
   const copyAll = () => {
@@ -62,23 +62,23 @@ const App = ({ data, raw }: AppProps): React.JSX.Element => {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <div className="flex bg-muted/50 p-1 rounded-xl border border-border mr-2">
-              <button 
+              <button
                 onClick={() => setViewMode("pretty")}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === "pretty" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 PRETTY
               </button>
-              <button 
+              <button
                 onClick={() => setViewMode("raw")}
                 className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${viewMode === "raw" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
               >
                 RAW
               </button>
             </div>
-            <button 
+            <button
               onClick={() => setIsDark(!isDark)}
               title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               className="p-2.5 hover:bg-accent rounded-xl border border-border shadow-sm transition-all active:scale-95"
@@ -92,8 +92,8 @@ const App = ({ data, raw }: AppProps): React.JSX.Element => {
           <div className="p-6 bg-muted/10 border-b border-border flex flex-col sm:flex-row items-center gap-4">
             <div className="relative flex-1 w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/60" />
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search keys or values..."
@@ -105,7 +105,7 @@ const App = ({ data, raw }: AppProps): React.JSX.Element => {
                 </div>
               )}
             </div>
-            <button 
+            <button
               onClick={copyAll}
               className="flex items-center justify-center gap-2 px-8 py-3.5 bg-primary text-primary-foreground rounded-2xl text-sm font-bold hover:opacity-90 transition-all shadow-lg shadow-primary/20 active:scale-[0.98] w-full sm:w-auto"
             >
@@ -113,39 +113,39 @@ const App = ({ data, raw }: AppProps): React.JSX.Element => {
               Copy
             </button>
           </div>
-          
+
           <div className="p-8 overflow-x-auto min-h-[500px]">
-             <div className="font-mono text-[13px] leading-relaxed">
-               {viewMode === "pretty" ? (
-                 <JsonNode 
-                   value={data} 
-                   path="root" 
-                   depth={0} 
-                   searchResults={searchResults}
-                   searchQuery={searchQuery}
-                   onHover={setHoveredPath}
-                 />
-               ) : (
-                 <pre className="whitespace-pre-wrap break-all text-muted-foreground bg-muted/20 p-6 rounded-3xl border border-border/50">
-                   {raw}
-                 </pre>
-               )}
-             </div>
+            <div className="font-mono text-[13px] leading-relaxed">
+              {viewMode === "pretty" ? (
+                <JsonNode
+                  value={data}
+                  path="root"
+                  depth={0}
+                  searchResults={searchResults}
+                  searchQuery={searchQuery}
+                  onHover={setHoveredPath}
+                />
+              ) : (
+                <pre className="whitespace-pre-wrap break-all text-muted-foreground bg-muted/20 p-6 rounded-3xl border border-border/50">
+                  {raw}
+                </pre>
+              )}
+            </div>
           </div>
         </main>
 
         <footer className="max-w-6xl mx-auto mt-8 flex items-center justify-between px-8">
           <div className="flex items-center gap-6">
-             <div className="text-[10px] font-bold text-muted-foreground/40 flex items-center gap-1.5 uppercase tracking-[0.2em]">
-                <FileText className="w-3 h-3" />
-                {raw.length.toLocaleString()} bytes
-             </div>
-             {hoveredPath && (
-               <div className="hidden lg:flex items-center gap-2 text-[10px] font-bold text-primary/60 uppercase tracking-[0.1em] animate-in fade-in slide-in-from-left-2">
-                 <span className="w-1 h-1 rounded-full bg-primary/40"></span>
-                 PATH: {hoveredPath}
-               </div>
-             )}
+            <div className="text-[10px] font-bold text-muted-foreground/40 flex items-center gap-1.5 uppercase tracking-[0.2em]">
+              <FileText className="w-3 h-3" />
+              {raw.length.toLocaleString()} bytes
+            </div>
+            {hoveredPath && (
+              <div className="hidden lg:flex items-center gap-2 text-[10px] font-bold text-primary/60 uppercase tracking-[0.1em] animate-in fade-in slide-in-from-left-2">
+                <span className="w-1 h-1 rounded-full bg-primary/40"></span>
+                PATH: {hoveredPath}
+              </div>
+            )}
           </div>
           <p className="text-[10px] uppercase tracking-widest text-muted-foreground/40 font-black">
             Studio Executive Edition
