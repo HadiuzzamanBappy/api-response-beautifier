@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronRight, ChevronDown, Copy } from "lucide-react";
+import { ChevronRight, ChevronDown, Copy, Hash } from "lucide-react";
 import { cn } from "@/utils/cn";
 
 interface JsonNodeProps {
@@ -17,7 +17,6 @@ const JsonNode = ({ label, value, path, depth, searchResults, searchQuery, onHov
   const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery);
   const isMatch = searchResults?.has(path);
 
-  // Auto-expand on search match during render (official React pattern)
   if (searchQuery !== prevSearchQuery) {
     setPrevSearchQuery(searchQuery);
     if (searchQuery && isMatch) {
@@ -34,16 +33,16 @@ const JsonNode = ({ label, value, path, depth, searchResults, searchQuery, onHov
     const parts = text.split(new RegExp(`(${searchQuery})`, "gi"));
     return parts.map((part, i) => 
       part.toLowerCase() === searchQuery.toLowerCase() 
-        ? <span key={i} className="bg-yellow-400/30 text-yellow-600 dark:text-yellow-300 px-0.5 rounded">{part}</span> 
+        ? <span key={i} className="bg-primary text-primary-foreground px-1 rounded-sm font-bold shadow-sm">{part}</span> 
         : part
     );
   };
 
   const renderValue = (): React.JSX.Element => {
-    if (value === null) return <span className="text-muted-foreground/60">null</span>;
-    if (type === "string") return <span className="text-emerald-500 dark:text-emerald-400">"{highlightText(value as string)}"</span>;
-    if (type === "number") return <span className="text-blue-500 dark:text-blue-400">{highlightText(String(value))}</span>;
-    if (type === "boolean") return <span className="text-violet-500 dark:text-violet-400">{String(value)}</span>;
+    if (value === null) return <span className="json-token-null font-black uppercase text-[10px]">null</span>;
+    if (type === "string") return <span className="json-token-string">"{highlightText(value as string)}"</span>;
+    if (type === "number") return <span className="json-token-number font-bold">{highlightText(String(value))}</span>;
+    if (type === "boolean") return <span className="json-token-boolean font-black uppercase text-[10px] tracking-widest">{String(value)}</span>;
     return <span>{String(value)}</span>;
   };
 
@@ -58,36 +57,43 @@ const JsonNode = ({ label, value, path, depth, searchResults, searchQuery, onHov
 
     return (
       <div 
-        className={cn("ml-2 py-0.5", depth > 0 && "ml-4 border-l border-border/50 pl-4")}
+        className={cn("ml-2 py-1", depth > 0 && "ml-5 border-l-2 border-border/20 pl-6 transition-all hover:border-primary/40")}
         onMouseEnter={(e) => { e.stopPropagation(); onHover?.(path); }}
         onMouseLeave={() => onHover?.(null)}
       >
         <div 
-          className="flex items-center gap-2 cursor-pointer group hover:bg-accent/50 rounded-lg px-2 py-1 transition-all duration-200"
+          className="flex items-center gap-3 cursor-pointer group hover:bg-primary/5 rounded-[0.75rem] px-3 py-1.5 transition-all duration-300"
           onClick={() => setIsCollapsed(!isCollapsed)}
         >
           {!isEmpty && (
-            <div className="text-muted-foreground group-hover:text-foreground transition-colors">
+            <div className="text-muted-foreground/40 group-hover:text-primary transition-colors duration-300">
               {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             </div>
           )}
           
-          <div className="flex items-center gap-1.5 overflow-hidden">
+          <div className="flex items-center gap-2 overflow-hidden">
             {label && (
-              <span className="text-primary font-semibold whitespace-nowrap">
-                {highlightText(label)}:
+              <span className="json-token-key font-bold whitespace-nowrap text-[13px] tracking-tight">
+                {highlightText(label)}
               </span>
             )}
-            <span className="text-muted-foreground text-[10px] uppercase font-bold tracking-wider whitespace-nowrap bg-muted/50 px-1.5 py-0.5 rounded">
-              {isArray ? `Array(${keys.length})` : `Object`}
+            <span className="flex items-center gap-1 text-[9px] font-black uppercase tracking-[0.15em] bg-muted/40 text-muted-foreground/60 px-2 py-0.5 rounded-full border border-border/30">
+              {isArray ? (
+                <>
+                  <Hash className="w-2.5 h-2.5" />
+                  ARRAY[{keys.length}]
+                </>
+              ) : (
+                "OBJECT"
+              )}
             </span>
           </div>
 
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity ml-auto pl-4">
+          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 ml-auto translate-x-2 group-hover:translate-x-0">
             <button 
               onClick={(e) => { e.stopPropagation(); copyToClipboard(path); }}
               title={`Copy path: ${path}`}
-              className="p-1 hover:bg-accent rounded text-muted-foreground hover:text-primary transition-all"
+              className="p-1.5 bg-background shadow-sm hover:bg-primary hover:text-primary-foreground rounded-lg transition-all active:scale-90"
             >
               <Copy className="w-3.5 h-3.5" />
             </button>
@@ -95,7 +101,7 @@ const JsonNode = ({ label, value, path, depth, searchResults, searchQuery, onHov
         </div>
         
         {!isCollapsed && !isEmpty && (
-          <div className="mt-1 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="mt-2 space-y-0.5 animate-in fade-in slide-in-from-top-2 duration-300">
             {keys.map((key) => (
               <JsonNode 
                 key={key} 
@@ -116,17 +122,17 @@ const JsonNode = ({ label, value, path, depth, searchResults, searchQuery, onHov
 
   return (
     <div 
-      className="ml-4 border-l border-border/50 pl-4 py-0.5 group flex items-center gap-2 hover:bg-accent/30 rounded-lg px-2 transition-all duration-200"
+      className="ml-5 border-l-2 border-border/20 pl-6 py-1.5 group flex items-center gap-3 hover:bg-primary/5 rounded-[0.75rem] px-3 transition-all duration-300"
       onMouseEnter={(e) => { e.stopPropagation(); onHover?.(path); }}
       onMouseLeave={() => onHover?.(null)}
     >
-      {label && <span className="text-primary/90 font-medium whitespace-nowrap">{highlightText(label)}:</span>}
-      <div className="font-mono break-all">{renderValue()}</div>
+      {label && <span className="json-token-key font-bold text-[13px] tracking-tight whitespace-nowrap">{highlightText(label)}</span>}
+      <div className="font-mono text-[13px] tracking-tight">{renderValue()}</div>
       
       <button 
         onClick={() => copyToClipboard(String(value))}
         title="Copy value"
-        className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-accent rounded text-muted-foreground hover:text-primary ml-auto"
+        className="opacity-0 group-hover:opacity-100 transition-all duration-300 p-1.5 bg-background shadow-sm hover:bg-primary hover:text-primary-foreground rounded-lg ml-auto translate-x-2 group-hover:translate-x-0 active:scale-90"
       >
         <Copy className="w-3.5 h-3.5" />
       </button>

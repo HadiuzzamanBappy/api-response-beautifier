@@ -30,7 +30,8 @@
     {
       "resources": [
         "assets/*",
-        "icons/*"
+        "icons/*",
+        "logo.png"
       ],
       "matches": [
         "<all_urls>"
