@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Sparkles, Settings, ExternalLink, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Settings, ExternalLink, Loader2, CheckCircle2, AlertCircle, Info } from "lucide-react";
 
 type Status = "idle" | "loading" | "success" | "already_beautified" | "not_json" | "error";
 
