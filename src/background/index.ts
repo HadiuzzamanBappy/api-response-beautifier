@@ -1,9 +1,9 @@
-async function injectAndBeautify(tabId: number) {
+async function injectAndBeautify(tabId: number): Promise<string> {
   try {
     // 1. Try to send a message first (in case it's already injected)
     try {
       const response = await chrome.tabs.sendMessage(tabId, { type: "BEAUTIFY_PAGE" });
-      if (response?.success) return;
+      if (response?.status) return response.status;
     } catch {
       // Message failed, need to inject
     }
@@ -15,12 +15,14 @@ async function injectAndBeautify(tabId: number) {
     });
 
     // 3. Trigger beautification check
-    // We send a message. The content script will check if it's JSON.
-    // If it IS JSON, it will ask the background to inject the CSS.
-    chrome.tabs.sendMessage(tabId, { type: "BEAUTIFY_PAGE" });
+    // Wait a tiny bit for the script to initialize
+    await new Promise(r => setTimeout(r, 50));
+    const finalResponse = await chrome.tabs.sendMessage(tabId, { type: "BEAUTIFY_PAGE" });
+    return finalResponse?.status || "ERROR";
 
   } catch (error) {
     console.error("Failed to inject API Beautifier:", error);
+    return "ERROR";
   }
 }
 
@@ -37,11 +39,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "TRIGGER_BEAUTIFY") {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]?.id) {
-        injectAndBeautify(tabs[0].id);
-        sendResponse({ success: true });
+        injectAndBeautify(tabs[0].id).then(status => {
+          sendResponse({ status });
+        });
+      } else {
+        sendResponse({ status: "ERROR" });
       }
     });
-    return true; 
+    return true; // Keep channel open
   }
 });
 

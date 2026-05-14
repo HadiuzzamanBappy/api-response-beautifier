@@ -4,24 +4,24 @@ import "./index.css";
 
 const MAX_JSON_SIZE = 2 * 1024 * 1024; // 2MB limit for performance
 
-async function init(force = false) {
+async function init(force = false): Promise<string> {
   // Ensure body exists (important for document_start)
-  if (!document.body) return;
+  if (!document.body) return "ERROR";
 
   // If already injected, don't do it again
-  if (document.getElementById("api-beautifier-root")) return;
+  if (document.getElementById("api-beautifier-root")) return "ALREADY_BEAUTIFIED";
 
   const isJsonType = document.contentType === "application/json";
   const isPlainText = document.contentType === "text/plain";
   const rawContent = document.body.innerText ? document.body.innerText.trim() : "";
 
   // Basic check: Must exist and have a minimum length
-  if (!rawContent || rawContent.length < 2) return;
+  if (!rawContent || rawContent.length < 2) return "NOT_JSON";
 
   // Size check to prevent browser freeze
   if (rawContent.length > MAX_JSON_SIZE) {
     console.debug("API Beautifier: File too large to beautify (>2MB), skipping.");
-    return;
+    return "FILE_TOO_LARGE";
   }
 
   // Sniffing logic
@@ -32,10 +32,10 @@ async function init(force = false) {
       // Only auto-run on plain text if it strictly looks like a JSON object/array
       const looksLikeJson = (rawContent.startsWith("{") && rawContent.endsWith("}")) ||
         (rawContent.startsWith("[") && rawContent.endsWith("]"));
-      if (!looksLikeJson) return;
+      if (!looksLikeJson) return "NOT_JSON";
     } else {
       // Don't auto-run on HTML or other types
-      return;
+      return "NOT_JSON";
     }
   }
 
@@ -59,19 +59,19 @@ async function init(force = false) {
 
     const root = createRoot(rootContainer);
     root.render(<App data={parsed} raw={rawContent} />);
+    return "SUCCESS";
   } catch (e) {
-    if (force) {
-      alert("API Beautifier: This page does not contain valid JSON.");
-    }
     console.debug("API Beautifier: Content is not valid JSON, skipping.", e);
+    return "NOT_JSON";
   }
 }
 
 // Listen for manual trigger from popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === "BEAUTIFY_PAGE") {
-    init(true);
-    sendResponse({ success: true });
+    init(true).then((status) => {
+      sendResponse({ status });
+    });
+    return true; // Keep channel open for async response
   }
 });
-
